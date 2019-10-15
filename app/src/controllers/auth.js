@@ -1,4 +1,5 @@
 const _ = require("lodash");
+const async = require('async');
 const mongoose = require("mongoose");
 const User = mongoose.model("User");
 const moment = require("moment");
@@ -11,7 +12,6 @@ const helper = require('sendgrid').mail;
 const sg = require('sendgrid')(config.sendgrid.apiKey);
 const deeplink = require('node-deeplink');
 const tokenHelper = require('../helpers/token');
-const async = require('async');
 const passwordHelper = require('../helpers/password');
 const EmailTemplate = require('email-templates');
 const sgTransport = require('nodemailer-sendgrid-transport');
@@ -21,55 +21,56 @@ const inlineCss = require('nodemailer-juice');
 const sgMail = require('@sendgrid/mail');
 
 
-function signin(req, res, next) {
+function signIn(req, res, next) {
     console.log('--- signin ---');
-    passport.authenticate('local', (err, user, info) => {
-        console.log('--- err ---');
-        console.log(err);
-        console.log('--- user ---');
-        console.log(user);
-        console.log('--- info ---');
-        console.log(info);
+    User.authenticate(req.body.email, req.body.password, (err, user) => {
         if (err) {
             console.error(err);
-            return next(err);
+            
+            return res.status(400).json({
+                code: "99",
+                status: "error",
+                success: false,
+                message: 'Unable to authenticate user',
+                error: {
+                    name: err.name,
+                    message: err.message
+                }
+            });
         }
 
         if (!user) {
-            console.log('--- info ---');
-            console.log(info);
 
-            return res.status(400).send(info);
+            return res.status(400).json({
+                code: "99",
+                status: "error",
+                success: false,
+                message: 'Invalid email or password.'
+            });
+
         }
 
         console.log('--- user ---');
-
         console.log(user);
 
-        req.logIn(user, (err) => {
-            if (err) {
-                console.error(err);
 
-                return next(err);
-            }
+        console.log('config.jwtSecret: ' + config.jwtSecret);
 
-            console.log('config.jwtSecret: ' + config.jwtSecret);
-
-            let token = jwt.sign(user, config.jwtSecret, {
-                expiresInMinutes: 1440 // expires in 24 hours
-            });
-
-            res.status(200).json({
-                code: '00',
-                status: 'success',
-                success: true,
-                message: 'User authenticated successfully',
-                data: {
-                    token: token
-                }
-            });
+        let token = jwt.sign(user, config.jwtSecret, {
+            expiresInMinutes: 1440 // expires in 24 hours
         });
-    })(req, res, next);
+
+        return res.json({
+            code: '00',
+            status: 'success',
+            success: true,
+            message: 'User authenticated successfully',
+            data: {
+                token: token
+            }
+        });
+
+    });
 }
 
 function registerUser(req, res, next) {
@@ -163,12 +164,12 @@ function registerUser(req, res, next) {
             console.log('--- user ---');
             console.log(user);
 
-            var fromEmail = new helper.Email('no-reply@email-verification.kolowise.com');
+            var fromEmail = new helper.Email('no-reply@email-verification.overwatch.com');
             var toEmail = new helper.Email(user.email);
-            var subject = 'Kolowise Email Verification';
-            var content = new helper.Content('text/plain', 'You are receiving this because you (or someone else) just created an account on Kolowise.\n\n' +
+            var subject = 'Over-Watch Email Verification';
+            var content = new helper.Content('text/plain', 'You are receiving this because you (or someone else) just created an account on Over-Watch.\n\n' +
                 'Please click on the following link, or paste this into your browser to verify your account:\n\n' +
-                config.baseUrl + '/auth/verify-email/' + token + '\n\n' +
+                config.baseUrl + 'abbbbllll/auth/verify-email/' + token + '\n\n' +
                 'If you did not request this, please ignore this email and your password will remain unchanged.\n');
 
             var mail = new helper.Mail(fromEmail, subject, toEmail, content);
@@ -317,10 +318,10 @@ function verifyUserEmail(req, res, next) {
             console.log('--- user ---');
             console.log(user);
 
-            var fromEmail = new helper.Email('no-reply@email-verification.kolowise.com');
+            var fromEmail = new helper.Email('no-reply@email-verification.overwatch.com');
             var toEmail = new helper.Email(user.email);
-            var subject = 'Kolowise Email Verification';
-            var content = new helper.Content('text/plain', 'You are receiving this because you (or someone else) just created an account on Kolowise.\n\n' +
+            var subject = 'Over-Watch Email Verification';
+            var content = new helper.Content('text/plain', 'You are receiving this because you (or someone else) just created an account on Over-Watch.\n\n' +
                 'Please click on the following link, or paste this into your browser to verify your account:\n\n' +
                 config.baseUrl + '/verify-email/' + token + '\n\n' +
                 'If you did not request this, please ignore this email and your password will remain unchanged.\n');
@@ -479,10 +480,10 @@ function verifyUserEmailWithToken(req, res, next) {
         });
 
 
-        /* return res.redirect('/verify-email/deeplink?url=kolowiseapp://kolowise.intelligentinnovations.co/verify-email?token=' + token
-            + '&fallback=http://kolowise.com/verify?token=' + token);
+        /* return res.redirect('/verify-email/deeplink?url=overwatchapp://overwatch.intelligentinnovations.co/verify-email?token=' + token
+            + '&fallback=http://overwatch.com/verify?token=' + token);
  */
-        return res.redirect('http://kolowise.com/verify?token=' + token);
+        return res.redirect('http://overwatch.com/verify?token=' + token);
 
 
     });
@@ -566,9 +567,9 @@ function forgotPassword(req, res, next) {
             console.log('--- config.baseUrl ---');
             console.log(config.baseUrl);
 
-            var fromEmail = new helper.Email('no-reply@password-reset.kolowise.com');
+            var fromEmail = new helper.Email('no-reply@password-reset.overwatch.com');
             var toEmail = new helper.Email(user.email);
-            var subject = 'Kolowise Password Reset';
+            var subject = 'Over-Watch Password Reset';
             var content = new helper.Content('text/plain', 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
                 'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
                 config.baseUrl + '/auth/reset-password/' + token + '\n\n' +
@@ -664,10 +665,10 @@ function resetPassword(req, res, next) {
 
         }
 
-        /* return res.redirect('/reset-password/deeplink?url=kolowiseapp://kolowise.intelligentinnovations.co/forgotpassword?token=' + token
-            + '&fallback=http://kolowise.com/reset-password?token=' + token);
+        /* return res.redirect('/reset-password/deeplink?url=overwatchapp://overwatch.intelligentinnovations.co/forgotpassword?token=' + token
+            + '&fallback=http://overwatch.com/reset-password?token=' + token);
  */
-        return res.redirect('http://kolowise.com/reset?token=' + token);
+        return res.redirect('http://overwatch.com/reset?token=' + token);
 
 
     });
@@ -753,23 +754,6 @@ function changePasswordWithToken(req, res, next) {
             console.log('--- user ----');
             console.log(user);
 
-            /* user.password = req.body.password;
-            user.resetPasswordToken = undefined;
-            user.resetPasswordExpires = undefined;
-
-            user.save((err, user) => {
-
-                if (err) {
-                    console.error(err);
-
-                    return callback(err);
-
-                } else {
-
-                    return callback(null, user);
-                }
-            }) */
-
             passwordHelper.hash(req.body.password, (err, hashedPassword, salt) => {
                 user.password = hashedPassword;
                 user.passwordSalt = salt;
@@ -796,9 +780,9 @@ function changePasswordWithToken(req, res, next) {
             console.log('--- user ---');
             console.log(user);
 
-            var fromEmail = new helper.Email('no-reply@password-reset.kolowise.com');
+            var fromEmail = new helper.Email('no-reply@password-reset.overwatch.com');
             var toEmail = new helper.Email(user.email);
-            var subject = 'Your Kolowise password has been changed';
+            var subject = 'Your Over-Watch password has been changed';
             var content = new helper.Content('text/plain', 'This is a confirmation that the password for your account ' + user.email + ' has just been changed.');
 
             var mail = new helper.Mail(fromEmail, subject, toEmail, content);
@@ -857,3 +841,5 @@ function changePasswordWithToken(req, res, next) {
         });
     });
 }
+
+module.exports = Object.assign({}, {signIn, registerUser, changePassword, changePasswordWithToken, forgotPassword, resetPassword, verifyUserEmail, verifyUserEmailWithToken});
