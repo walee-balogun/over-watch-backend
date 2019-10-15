@@ -12,7 +12,7 @@ const dbConfig = {
 
 const serverConfig = {
     port: process.env.PORT || 3000,
-    hostname: process.env.HOST || '',
+    hostname: process.env.HOST || 'localhost',
     jwtSecret: '',
     serverStatic: true,
     session: {
@@ -24,8 +24,11 @@ const serverConfig = {
 };
 
 const appConfig = {
-    name: "Over Watch"
+    name: "Over Watch",
+    sendgrid: {
+        apiKey: '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'
+    },
 };
 
 
-module.exports = Object.assign({}, {dbConfig, serverConfig, appConfig});
+module.exports = Object.assign({}, { dbConfig, serverConfig, appConfig });

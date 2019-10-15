@@ -66,8 +66,8 @@ const startExpress = (options) => {
         app.use(serveStatic(path.join(root, 'public')));
     }
 
-    require('./models').init(app);
-    require('./routes').init(app);
+    require('./models').initModels(app);
+    require('./routes').initRoutes(app);
 
 
     const server = http.createServer(app);

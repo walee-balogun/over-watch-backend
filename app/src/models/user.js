@@ -1,5 +1,9 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const passwordHelper = require('../helpers/password');
+const tokenHelper = require('../helpers/token');
+const _ = require('lodash');
+
 
 const UserSchema = new Schema({
     firstName: {
@@ -24,7 +28,7 @@ const UserSchema = new Schema({
         select: false
     },
     passwordSalt: {
-        String,
+        type: String,
         required: true,
         select: false
     },
@@ -111,7 +115,7 @@ function authenticateUser(email, password, callback) {
 function registerUser(opts, callback) {
     let data = _.cloneDeep(opts);
 
-    passwordHelper.hash(opts.password, (err, hashedPassword, salt) => {
+    passwordHelper.hashPassword(opts.password, (err, hashedPassword, salt) => {
         if (err) {
             return callback(err);
         }

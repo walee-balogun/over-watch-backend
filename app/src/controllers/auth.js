@@ -3,13 +3,10 @@ const async = require('async');
 const mongoose = require("mongoose");
 const User = mongoose.model("User");
 const moment = require("moment");
-const passport = require('passport');
-const mongoose = require('mongoose');
-const User = mongoose.model('User');
 const config = require('./../../config/index');
 const jwt = require('jsonwebtoken');
 const helper = require('sendgrid').mail;
-const sg = require('sendgrid')(config.sendgrid.apiKey);
+const sg = require('sendgrid')(config.appConfig.sendgrid.apiKey);
 const deeplink = require('node-deeplink');
 const tokenHelper = require('../helpers/token');
 const passwordHelper = require('../helpers/password');
@@ -19,10 +16,10 @@ const path = require('path');
 const nodemailer = require('nodemailer');
 const inlineCss = require('nodemailer-juice');
 const sgMail = require('@sendgrid/mail');
+const crypto = require("crypto");
 
 
 function signIn(req, res, next) {
-    console.log('--- signin ---');
     User.authenticate(req.body.email, req.body.password, (err, user) => {
         if (err) {
             console.error(err);
@@ -50,9 +47,6 @@ function signIn(req, res, next) {
 
         }
 
-        console.log('--- user ---');
-        console.log(user);
-
 
         console.log('config.jwtSecret: ' + config.jwtSecret);
 
@@ -73,7 +67,7 @@ function signIn(req, res, next) {
     });
 }
 
-function registerUser(req, res, next) {
+function register(req, res, next) {
     console.log('--- reqgisterUser ---');
     let userData = _.pick(req.body, 'firstName', 'lastName', 'email', 'phoneNo', 'password', 'medium');
 
@@ -164,13 +158,17 @@ function registerUser(req, res, next) {
             console.log('--- user ---');
             console.log(user);
 
+            console.log("http://"+config.serverConfig.hostname+":"+config.serverConfig.port);
+
+
+            var chars = "abcdefghijklmnopqrstuvwxyz1234567890";
+
             var fromEmail = new helper.Email('no-reply@email-verification.overwatch.com');
             var toEmail = new helper.Email(user.email);
             var subject = 'Over-Watch Email Verification';
             var content = new helper.Content('text/plain', 'You are receiving this because you (or someone else) just created an account on Over-Watch.\n\n' +
                 'Please click on the following link, or paste this into your browser to verify your account:\n\n' +
-                config.baseUrl + 'abbbbllll/auth/verify-email/' + token + '\n\n' +
-                'If you did not request this, please ignore this email and your password will remain unchanged.\n');
+                "http://"+config.serverConfig.hostname+":"+config.serverConfig.port + '/abldkcef'+ crypto.createHash('md5').update( chars + moment.now()).digest('base64') + "/" + token + '\n\n');
 
             var mail = new helper.Mail(fromEmail, subject, toEmail, content);
 
@@ -565,14 +563,16 @@ function forgotPassword(req, res, next) {
             console.log(user);
 
             console.log('--- config.baseUrl ---');
-            console.log(config.baseUrl);
+            console.log("http://"+config.serverConfig.hostname+":"+config.serverConfig.port);
+
+            var chars = "abcdefghijklmnopqrstuvwxyz1234567890";
 
             var fromEmail = new helper.Email('no-reply@password-reset.overwatch.com');
             var toEmail = new helper.Email(user.email);
             var subject = 'Over-Watch Password Reset';
             var content = new helper.Content('text/plain', 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
                 'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
-                config.baseUrl + '/auth/reset-password/' + token + '\n\n' +
+                "http://"+config.serverConfig.hostname+":"+config.serverConfig.port + '/rbstmajf'+ crypto.createHash('md5').update( chars + moment.now()).digest('base64') + "/"+ token + '\n\n' +
                 'If you did not request this, please ignore this email and your password will remain unchanged.\n');
 
             var mail = new helper.Mail(fromEmail, subject, toEmail, content);
@@ -842,4 +842,4 @@ function changePasswordWithToken(req, res, next) {
     });
 }
 
-module.exports = Object.assign({}, {signIn, registerUser, changePassword, changePasswordWithToken, forgotPassword, resetPassword, verifyUserEmail, verifyUserEmailWithToken});
+module.exports = Object.assign({}, {signIn, register, changePassword, changePasswordWithToken, forgotPassword, resetPassword, verifyUserEmail, verifyUserEmailWithToken});
