@@ -3,7 +3,7 @@ const dbConfig = {
     hostname: process.env.DB_HOST || '',
     user: process.env.DB_USER || '',
     pass: process.env.DB_PASS || '',
-    uri: process.env.DB_URI || 'mongodb://127.0.0.1:27017/over-watch-db',
+    uri: process.env.DB_URI || 'mongodb://adewale:P@33w0rd.123$@ds163182.mlab.com:63182/over_watch_db',
     repl: process.env.DB_REPLS || 'rs1',
     servers: (process.env.DB_SERVERS) ? process.env.DB_SERVERS.split(' ') : [
         '127.0.0.1:27017'
